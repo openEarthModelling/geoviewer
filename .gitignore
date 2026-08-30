@@ -1,0 +1,13 @@
+# Superpowers 工作流产物（本地设计文档，永不提交）
+docs/superpowers/
+docs/plans/
+.superpowers/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# 运行时
+*.log
