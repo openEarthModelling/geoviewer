@@ -1,0 +1,13 @@
+# 记录依赖（环境已装，勿 pip install）
+xarray>=2025.10
+netCDF4>=1.7
+h5py>=3.15
+cfgrib>=0.9.15
+eccodes>=2.47
+panel>=1.8
+hvplot>=0.12
+holoviews>=1.22
+datashader>=0.18
+bokeh>=3.8
+dask
+pytest
