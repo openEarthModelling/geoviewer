@@ -5,9 +5,9 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-# datashader relies on numba's jit cache; on node01's geo env the default cache
-# location raises "no locator available", so redirect to a writable /tmp dir
-# (must be set before importing panel/hvplot).
+# datashader relies on numba's jit cache; some environments raise "no locator
+# available" with the default cache location, so redirect to a writable /tmp
+# dir (must be set before importing panel/hvplot).
 os.environ.setdefault("NUMBA_CACHE_DIR", os.path.join(tempfile.gettempdir(), "numba_cache"))
 
 import panel as pn
@@ -25,7 +25,7 @@ from ui.variable_panel import VariablePanel
 
 pn.extension()
 
-roots = [p for p in os.environ.get("NC_VIEWER_ROOTS", "/data/GEOSChem").split(":") if p]
+roots = [p for p in os.environ.get("NC_VIEWER_ROOTS", ".").split(":") if p]
 catalog = Catalog(roots)
 slice_svc = SliceService()
 fb = FileBrowser(catalog)

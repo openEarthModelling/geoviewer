@@ -1,4 +1,4 @@
-# 记录依赖（环境已装，勿 pip install）
+# Runtime dependencies (the development environment already has them installed)
 xarray>=2025.10
 netCDF4>=1.7
 h5py>=3.15
