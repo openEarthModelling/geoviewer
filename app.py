@@ -14,6 +14,7 @@ from ui.controls import Controls
 from ui.file_browser import FileBrowser
 from ui.layout import build_layout
 from ui.map_panel import MapPanel
+from ui.metadata_panel import MetadataPanel
 from ui.variable_panel import VariablePanel
 
 pn.extension()
@@ -25,8 +26,10 @@ fb = FileBrowser(catalog)
 vp = VariablePanel()
 mp = MapPanel()
 ctl = Controls()
+mdp = MetadataPanel()
+status_bar = pn.pane.Markdown("格式：— · dims：— · 加载：就绪")
 
-state = {"file": None, "var": None, "dims": [], "sizes": {}, "auto_role": None}
+state = {"file": None, "var": None, "fmt": None, "dims": [], "sizes": {}, "auto_role": None}
 
 
 def render():
@@ -62,10 +65,13 @@ def on_file(event):
     if event.new is None:
         return
     full = catalog.resolve(event.new)
-    reader = get_reader(identify(full))
+    fmt = identify(full)
+    reader = get_reader(fmt)
     infos = reader.list_variables(full)
     vp.set_variables(infos)
     state["file"] = full
+    state["fmt"] = fmt
+    status_bar.object = f"格式：{fmt} · 文件：{event.new} · 加载：就绪"
 
 
 def on_var(event):
@@ -84,8 +90,23 @@ def on_var(event):
     _watch_role_widgets()
     if role.time and role.time in state["sizes"]:
         ctl.time_slider.end = state["sizes"][role.time] - 1
+    mdp.show(state["file"], state["var"])
+    status_bar.object = f"格式：{state['fmt']} · dims：{info.shape} · 加载：就绪"
     render()
 
+
+def safe(fn):
+    def wrapper(*a, **k):
+        try:
+            fn(*a, **k)
+        except Exception as e:
+            pn.state.notifications.error(str(e))
+    return wrapper
+
+
+render = safe(render)
+on_file = safe(on_file)
+on_var = safe(on_var)
 
 fb.file_select.param.watch(on_file, "value")
 vp.var_select.param.watch(on_var, "value")
@@ -98,6 +119,7 @@ layout = build_layout({
     "variable_panel": vp,
     "map_panel": mp,
     "controls": ctl,
-    "metadata": pn.pane.Markdown("（元数据）"),
+    "metadata": mdp,
 })
+layout.append(status_bar)
 layout.servable()

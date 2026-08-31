@@ -1,13 +1,18 @@
+import netCDF4
 import numpy as np
 import panel as pn
+import pytest
 import xarray as xr
 
 from services.catalog import Catalog
+from services.dimension import auto_assign
 from ui.controls import Controls
 from ui.file_browser import FileBrowser
 from ui.map_panel import MapPanel
 from ui.variable_panel import VariablePanel
 from ui.layout import build_layout
+from ui.metadata_panel import MetadataPanel
+from readers import identify, get_reader
 from readers.base import VarInfo
 
 
@@ -50,3 +55,33 @@ def test_controls_time_slider():
     assert c.time_slider.value == 0
     c.time_slider.value = 2
     assert c.time_slider.value == 2
+
+
+def test_metadata_panel(tmp_path):
+    p = tmp_path / "m.nc"
+    ds = netCDF4.Dataset(p, "w")
+    ds.createDimension("x", 2)
+    v = ds.createVariable("v", "f8", ("x",))
+    v.units = "K"
+    ds.close()
+    mp = MetadataPanel()
+    mp.show(str(p), "v")
+    assert "units" in str(mp.pane.object)
+
+
+def test_end_to_end_nc(tmp_path):
+    """完整管线：identify -> list -> read_slice -> auto_assign。"""
+    p = tmp_path / "e2e.nc"
+    ds = netCDF4.Dataset(p, "w")
+    for d in ("time", "lat", "lon"):
+        ds.createDimension(d, 3)
+    v = ds.createVariable("t", "f8", ("time", "lat", "lon"))
+    v[:] = np.arange(27).reshape(3, 3, 3)
+    ds.close()
+    reader = get_reader(identify(str(p)))
+    infos = reader.list_variables(str(p))
+    assert infos[0].path == "t"
+    da = reader.read_slice(str(p), "t", {"time": 1})
+    role = auto_assign(list(da.dims))
+    assert role.x == "lon"
+    assert role.y == "lat"
