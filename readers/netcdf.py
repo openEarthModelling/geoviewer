@@ -37,7 +37,7 @@ class NetCDFReader(Reader):
         try:
             items = self._walk(path)
         except Exception as e:
-            raise OpenFailed(f"打开 netCDF 失败: {path}: {e}") from e
+            raise OpenFailed(f"failed to open netCDF: {path}: {e}") from e
         return [
             VarInfo(
                 path=vp,
@@ -53,20 +53,18 @@ class NetCDFReader(Reader):
     def read_slice(self, path: str, var_path: str, slices: dict) -> xr.DataArray:
         group, name = _split_var_path(var_path)
         try:
-            ds = xr.open_dataset(path, group=group, chunks={})
+            ds = xr.open_dataset(path, group=group, chunks="auto")
         except Exception as e:
-            raise OpenFailed(f"打开 netCDF 失败: {path}: {e}") from e
-        if name not in ds:
-            ds.close()
-            raise VariableNotFound(f"变量不存在: {var_path}")
-        da = ds[name]
-        try:
-            out = da.isel(**{k: v for k, v in slices.items() if k in da.dims})
-        except (IndexError, KeyError, ValueError) as e:
-            ds.close()
-            raise SliceOutOfBounds(f"切片越界: {slices}: {e}") from e
-        result = out.compute()
-        ds.close()
+            raise OpenFailed(f"failed to open netCDF: {path}: {e}") from e
+        with ds:
+            if name not in ds:
+                raise VariableNotFound(f"variable not found: {var_path}")
+            da = ds[name]
+            try:
+                out = da.isel(**{k: v for k, v in slices.items() if k in da.dims})
+            except (IndexError, KeyError, ValueError) as e:
+                raise SliceOutOfBounds(f"slice out of bounds: {slices}: {e}") from e
+            result = out.compute()
         return result
 
     def read_metadata(self, path: str, var_path: str) -> dict:
@@ -74,10 +72,9 @@ class NetCDFReader(Reader):
         try:
             ds = xr.open_dataset(path, group=group)
         except Exception as e:
-            raise OpenFailed(f"打开 netCDF 失败: {path}: {e}") from e
-        if name not in ds:
-            ds.close()
-            raise VariableNotFound(f"变量不存在: {var_path}")
-        attrs = dict(ds[name].attrs)
-        ds.close()
+            raise OpenFailed(f"failed to open netCDF: {path}: {e}") from e
+        with ds:
+            if name not in ds:
+                raise VariableNotFound(f"variable not found: {var_path}")
+            attrs = dict(ds[name].attrs)
         return attrs
