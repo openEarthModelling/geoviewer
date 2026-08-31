@@ -43,6 +43,21 @@ def test_variable_panel_set():
     assert vp.var_select.value == "v"
 
 
+def test_variable_panel_defaults_to_mapable():
+    """默认选中第一个能被 auto_assign 识别出经纬度（x/y）的可绘图变量。
+
+    回归：lat 坐标变量、time_bnds（time,nbnd 非经纬度）不应被默认选中，而应选 TREFHT。
+    """
+    infos = [
+        VarInfo(path="lat", name="lat", shape=(5,), dims=("lat",), is_plottable=False, format="netcdf"),
+        VarInfo(path="time_bnds", name="time_bnds", shape=(3, 2), dims=("time", "nbnd"), is_plottable=True, format="netcdf"),
+        VarInfo(path="TREFHT", name="TREFHT", shape=(3, 5, 6), dims=("time", "lat", "lon"), is_plottable=True, format="netcdf"),
+    ]
+    vp = VariablePanel()
+    vp.set_variables(infos)
+    assert vp.var_select.value == "TREFHT"
+
+
 def test_map_panel_render():
     mp = MapPanel()
     da = xr.DataArray(np.zeros((4, 5)), dims=("lat", "lon"))
