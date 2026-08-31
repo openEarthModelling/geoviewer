@@ -8,7 +8,7 @@ class VariablePanel(pn.Column):
     """Variable panel: shows the selectable variables of the current file."""
 
     def __init__(self):
-        self.var_select = pn.widgets.Select(name="变量", options=[], value=None)
+        self.var_select = pn.widgets.Select(label="变量", options=[], value=None)
         self._infos = {}
         super().__init__(self.var_select)
 

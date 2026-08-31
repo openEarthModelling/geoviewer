@@ -10,13 +10,13 @@ class Controls(pn.Column):
 
     def __init__(self):
         self.mode_toggle = pn.widgets.RadioButtonGroup(
-            name="模式", options=["自动", "手动"], value="自动"
+            label="模式", options=["自动", "手动"], value="自动"
         )
         # end=1 avoids the start==end Bokeh E-1021 warning; sliders are inert until a variable is selected
-        self.time_slider = pn.widgets.IntSlider(name="时间步", start=0, end=1, value=0)
-        self.level_slider = pn.widgets.IntSlider(name="层", start=0, end=1, value=0)
+        self.time_slider = pn.widgets.IntSlider(label="时间步", start=0, end=1, value=0)
+        self.level_slider = pn.widgets.IntSlider(label="层", start=0, end=1, value=0)
         self.cmap_select = pn.widgets.Select(
-            name="调色板",
+            label="调色板",
             options=["turbo", "viridis", "cividis", "magma", "inferno", "RdBu_r"],
             value="turbo",
         )
@@ -48,7 +48,7 @@ class Controls(pn.Column):
                      "z" if d == role.z else
                      "time" if d == role.time else "fixed")
             w = pn.widgets.Select(
-                name=f"维度 {d}",
+                label=f"维度 {d}",
                 options=_ROLES + ["忽略"],
                 value=label,
             )
