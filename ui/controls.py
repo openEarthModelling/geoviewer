@@ -6,14 +6,15 @@ _ROLES = ["x", "y", "z", "time", "fixed"]
 
 
 class Controls(pn.Column):
-    """控制面板：模式切换、时间滑块、调色板、每维度角色选择。"""
+    """Control panel: mode toggle, time slider, colormap, per-dimension role selectors."""
 
     def __init__(self):
         self.mode_toggle = pn.widgets.RadioButtonGroup(
             name="模式", options=["自动", "手动"], value="自动"
         )
-        self.time_slider = pn.widgets.IntSlider(name="时间步", start=0, end=0, value=0)
-        self.level_slider = pn.widgets.IntSlider(name="层", start=0, end=0, value=0)
+        # end=1 avoids the start==end Bokeh E-1021 warning; sliders are inert until a variable is selected
+        self.time_slider = pn.widgets.IntSlider(name="时间步", start=0, end=1, value=0)
+        self.level_slider = pn.widgets.IntSlider(name="层", start=0, end=1, value=0)
         self.cmap_select = pn.widgets.Select(
             name="调色板",
             options=["turbo", "viridis", "cividis", "magma", "inferno", "RdBu_r"],
@@ -24,10 +25,10 @@ class Controls(pn.Column):
                          self.cmap_select)
 
     def set_dims(self, dims: list[str], role: RoleAssignment = None):
-        """为每个维度建角色选择下拉框；role 缺省时用 auto_assign 推断。"""
+        """Build a role selector per dimension; infer via auto_assign when role is absent."""
         if role is None:
             role = auto_assign(dims)
-        # 清空旧的 role widgets，避免重复累积
+        # Remove old role widgets to avoid accumulation
         for w in list(self.role_widgets.values()):
             try:
                 self.remove(w)
@@ -35,13 +36,13 @@ class Controls(pn.Column):
                 pass
         self.role_widgets = {}
         self.time_slider.start = 0
-        self.time_slider.end = 0
+        self.time_slider.end = 1
         self.time_slider.value = 0
         self.level_slider.start = 0
-        self.level_slider.end = 0
+        self.level_slider.end = 1
         self.level_slider.value = 0
         for d in dims:
-            # 角色标签（"x"/"y"/"z"/"time"/"fixed"），不是维度名
+            # Role label ("x"/"y"/"z"/"time"/"fixed"), not the dimension name
             label = ("x" if d == role.x else
                      "y" if d == role.y else
                      "z" if d == role.z else
