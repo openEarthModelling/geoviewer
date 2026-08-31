@@ -1,3 +1,5 @@
+import os
+
 import pytest
 
 from services.catalog import Catalog, PathOutsideWhitelist
@@ -31,3 +33,14 @@ def test_resolve_traversal_blocked(cat):
 def test_resolve_outside_blocked(cat):
     with pytest.raises(PathOutsideWhitelist):
         cat.resolve("/etc/passwd")
+
+
+def test_resolve_symlink_escape_blocked(tmp_path):
+    root = tmp_path / "root"
+    outside = tmp_path / "outside"
+    root.mkdir()
+    outside.mkdir()
+    (outside / "secret.txt").write_bytes(b"x")
+    os.symlink(outside, root / "link")
+    with pytest.raises(PathOutsideWhitelist):
+        Catalog([str(root)]).resolve("link/secret.txt")

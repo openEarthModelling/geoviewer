@@ -18,14 +18,15 @@ class Catalog:
     """目录白名单：仅允许浏览给定根路径之下的内容，并防御路径穿越。"""
 
     def __init__(self, roots: list[str]):
-        self.roots = [os.path.abspath(r) for r in roots]
+        self.roots = [os.path.realpath(r) for r in roots]
 
     def resolve(self, rel_path: str) -> str:
         """把相对路径解析到某个根下；越界抛 PathOutsideWhitelist。"""
         # 不能 lstrip("/")：绝对路径（如 /etc/passwd）必须按绝对路径判定，
         # 否则会被拼到根下当成根内相对路径，绕过白名单。
+        # 用 realpath 解析 symlink，防止根内 symlink 指向白名单外目标。
         for root in self.roots:
-            full = os.path.abspath(os.path.join(root, rel_path))
+            full = os.path.realpath(os.path.join(root, rel_path))
             if full == root or full.startswith(root + os.sep):
                 return full
         raise PathOutsideWhitelist(f"path outside whitelist: {rel_path}")
