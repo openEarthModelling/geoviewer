@@ -1,8 +1,14 @@
 import os
 import sys
+import tempfile
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+# datashader relies on numba's jit cache; on node01's geo env the default cache
+# location raises "no locator available", so redirect to a writable /tmp dir
+# (must be set before importing panel/hvplot).
+os.environ.setdefault("NUMBA_CACHE_DIR", os.path.join(tempfile.gettempdir(), "numba_cache"))
 
 import panel as pn
 
@@ -41,7 +47,7 @@ def render():
         role = state["auto_role"]
     if role is None:
         return
-    # 取当前时间步/层切片，固定维度按索引 0 切
+    # Take the current time/level slice; fixed dims are sliced at index 0
     slices = {}
     if role.time and role.time in state["dims"]:
         slices[role.time] = ctl.time_slider.value
@@ -58,7 +64,7 @@ def render():
 
 
 def _watch_role_widgets():
-    # 角色下拉框在 set_dims 时动态创建，须在每次重建后重新挂监听
+    # Role selectors are created dynamically in set_dims, so re-attach listeners after each rebuild
     for w in ctl.role_widgets.values():
         w.param.watch(lambda e: render(), "value")
 
@@ -70,8 +76,9 @@ def on_file(event):
     fmt = identify(full)
     reader = get_reader(fmt)
     infos = reader.list_variables(full)
-    # 先落文件状态并清空旧变量/面板，再填充变量列表：set_variables 会同步
-    # 赋值 var_select.value 并触发 on_var，须保证 on_var 读到的是新文件。
+    # Set file state and clear the old variable/panels first, then fill the
+    # variable list: set_variables assigns var_select.value synchronously and
+    # triggers on_var, which must read the new file.
     state["file"] = full
     state["fmt"] = fmt
     state["var"] = None
@@ -91,7 +98,7 @@ def on_var(event):
     info = vp.get_info(event.new)
     if info is None:
         return
-    # 用 VarInfo 的 dims/shape 做维度识别，不读入整个变量
+    # Use VarInfo's dims/shape for dimension detection without reading the whole variable
     state["dims"] = list(info.dims)
     state["sizes"] = dict(zip(info.dims, info.shape))
     role = auto_assign(state["dims"])
