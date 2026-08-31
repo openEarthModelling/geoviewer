@@ -12,7 +12,7 @@ class HDF5Reader(Reader):
         try:
             f = h5py.File(path, "r")
         except Exception as e:
-            raise OpenFailed(f"打开 HDF5 失败: {path}: {e}") from e
+            raise OpenFailed(f"failed to open HDF5: {path}: {e}") from e
         items = []
         f.visititems(lambda name, obj: items.append(
             (name, tuple(obj.shape), obj.ndim))
@@ -35,10 +35,13 @@ class HDF5Reader(Reader):
 
     def read_slice(self, path: str, var_path: str, slices: dict) -> xr.DataArray:
         name = var_path.lstrip("/")
-        f = h5py.File(path, "r")
+        try:
+            f = h5py.File(path, "r")
+        except Exception as e:
+            raise OpenFailed(f"failed to open HDF5: {path}: {e}") from e
         if name not in f:
             f.close()
-            raise VariableNotFound(f"变量不存在: {var_path}")
+            raise VariableNotFound(f"variable not found: {var_path}")
         ds = f[name]
         idx = []
         for i in range(ds.ndim):
@@ -47,7 +50,7 @@ class HDF5Reader(Reader):
                 v = slices[key]
                 if v < 0 or v >= ds.shape[i]:
                     f.close()
-                    raise SliceOutOfBounds(f"切片越界: {key}={v}")
+                    raise SliceOutOfBounds(f"slice out of bounds: {key}={v}")
                 idx.append(v)
             else:
                 idx.append(slice(None))
@@ -61,10 +64,13 @@ class HDF5Reader(Reader):
 
     def read_metadata(self, path: str, var_path: str) -> dict:
         name = var_path.lstrip("/")
-        f = h5py.File(path, "r")
+        try:
+            f = h5py.File(path, "r")
+        except Exception as e:
+            raise OpenFailed(f"failed to open HDF5: {path}: {e}") from e
         if name not in f:
             f.close()
-            raise VariableNotFound(f"变量不存在: {var_path}")
+            raise VariableNotFound(f"variable not found: {var_path}")
         attrs = {k: v for k, v in f[name].attrs.items()}
         f.close()
         return attrs
