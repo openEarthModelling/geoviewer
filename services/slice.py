@@ -1,6 +1,6 @@
 from functools import lru_cache
 
-from readers import identify, get_reader
+from readers import get_reader, identify
 
 
 class SliceService:

@@ -2,7 +2,7 @@ import netCDF4
 import numpy as np
 import pytest
 
-from readers.base import VariableNotFound, SliceOutOfBounds
+from readers.base import SliceOutOfBounds, VariableNotFound
 from readers.netcdf import NetCDFReader
 
 

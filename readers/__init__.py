@@ -1,9 +1,9 @@
 import os
 
 from .base import FormatNotRecognized
-from .netcdf import NetCDFReader
-from .hdf5 import HDF5Reader
 from .grib import GRIBReader
+from .hdf5 import HDF5Reader
+from .netcdf import NetCDFReader
 
 _READERS = {
     "netcdf": NetCDFReader(),

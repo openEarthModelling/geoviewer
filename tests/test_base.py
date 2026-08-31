@@ -1,8 +1,11 @@
-import pytest
 
 from readers.base import (
-    ReaderError, FormatNotRecognized, OpenFailed,
-    VariableNotFound, SliceOutOfBounds, VarInfo,
+    FormatNotRecognized,
+    OpenFailed,
+    ReaderError,
+    SliceOutOfBounds,
+    VariableNotFound,
+    VarInfo,
 )
 
 

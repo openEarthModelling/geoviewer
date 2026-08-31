@@ -1,7 +1,7 @@
 import eccodes
 import xarray as xr
 
-from .base import Reader, VarInfo, OpenFailed, VariableNotFound
+from .base import OpenFailed, Reader, VariableNotFound, VarInfo
 
 
 class GRIBReader(Reader):
@@ -110,7 +110,7 @@ class GRIBReader(Reader):
 
     def read_metadata(self, path: str, var_path: str) -> dict:
         short, typ, lvl = self._split(var_path)
-        for s, t, l in self._messages(path):
-            if (s, t, l) == (short, typ, lvl):
+        for s, t, level in self._messages(path):
+            if (s, t, level) == (short, typ, lvl):
                 return {"shortName": short, "typeOfLevel": typ, "level": lvl}
         raise VariableNotFound(f"variable not found: {var_path}")

@@ -1,4 +1,4 @@
-from services.dimension import RoleAssignment, auto_assign
+from services.dimension import auto_assign
 
 
 def test_auto_assign_standard():

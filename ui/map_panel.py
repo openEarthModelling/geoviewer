@@ -1,4 +1,4 @@
-import hvplot.xarray
+import hvplot.xarray  # noqa: F401 -- registers the xarray accessor used by `da.hvplot`
 import panel as pn
 
 

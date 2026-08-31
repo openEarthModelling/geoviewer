@@ -12,7 +12,7 @@ os.environ.setdefault("NUMBA_CACHE_DIR", os.path.join(tempfile.gettempdir(), "nu
 
 import panel as pn
 
-from readers import identify, get_reader
+from readers import get_reader, identify
 from services.catalog import Catalog
 from services.dimension import auto_assign
 from services.slice import SliceService
