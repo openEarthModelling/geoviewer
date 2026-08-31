@@ -3,33 +3,46 @@ from dataclasses import dataclass
 
 
 class PathOutsideWhitelist(Exception):
-    """相对路径解析结果越出白名单根目录时抛出。"""
+    """Raised when a relative path resolves outside the whitelisted roots."""
     pass
 
 
 @dataclass
 class Entry:
     name: str
-    path: str     # 相对根的白名单内路径
+    path: str     # path relative to the whitelist root
     is_dir: bool
 
 
 class Catalog:
-    """目录白名单：仅允许浏览给定根路径之下的内容，并防御路径穿越。"""
+    """Directory whitelist: only allows browsing beneath the given roots, with path-traversal protection."""
 
     def __init__(self, roots: list[str]):
         self.roots = [os.path.realpath(r) for r in roots]
 
     def resolve(self, rel_path: str) -> str:
-        """把相对路径解析到某个根下；越界抛 PathOutsideWhitelist。"""
-        # 不能 lstrip("/")：绝对路径（如 /etc/passwd）必须按绝对路径判定，
-        # 否则会被拼到根下当成根内相对路径，绕过白名单。
-        # 用 realpath 解析 symlink，防止根内 symlink 指向白名单外目标。
+        """Resolve a relative path under one of the roots; raises PathOutsideWhitelist if outside."""
+        # Do not lstrip("/"): absolute paths (e.g. /etc/passwd) must be judged as
+        # absolute, otherwise they would be joined under a root and treated as
+        # inside it, bypassing the whitelist.
+        # Use realpath to resolve symlinks, so an in-root symlink cannot point outside.
         for root in self.roots:
             full = os.path.realpath(os.path.join(root, rel_path))
             if full == root or full.startswith(root + os.sep):
                 return full
         raise PathOutsideWhitelist(f"path outside whitelist: {rel_path}")
+
+    def to_rel(self, path: str) -> str:
+        """Normalize an absolute or relative path to a whitelisted relative path (root is ""); raises PathOutsideWhitelist if outside."""
+        if not path:
+            return ""
+        full = self.resolve(path)
+        for root in self.roots:
+            if full == root:
+                return ""
+            if full.startswith(root + os.sep):
+                return os.path.relpath(full, root)
+        raise PathOutsideWhitelist(f"path outside whitelist: {path}")
 
     def list_dir(self, rel_path: str) -> list[Entry]:
         base = self.resolve(rel_path)
