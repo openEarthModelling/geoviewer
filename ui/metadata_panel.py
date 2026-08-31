@@ -4,7 +4,7 @@ from readers import identify, get_reader
 
 
 class MetadataPanel(pn.Column):
-    """元数据面板：展示当前变量的属性。"""
+    """Metadata panel: shows the current variable's attributes."""
 
     def __init__(self):
         self.pane = pn.pane.Markdown("（未选择变量）")

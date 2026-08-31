@@ -29,4 +29,4 @@ def test_cache_hit(nc):
     svc = SliceService(maxsize=2)
     a = svc.get(nc, "v", {"time": 0})
     b = svc.get(nc, "v", {"time": 0})
-    assert a is b  # 命中缓存，同一对象
+    assert a is b  # cache hit, same object

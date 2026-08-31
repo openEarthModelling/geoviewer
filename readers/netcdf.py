@@ -5,7 +5,7 @@ from .base import Reader, VarInfo, OpenFailed, VariableNotFound, SliceOutOfBound
 
 
 def _split_var_path(var_path: str) -> tuple:
-    """'/sub/pm' -> ('/sub', 'pm'); 'o3' -> (None, 'o3')。"""
+    """'/sub/pm' -> ('/sub', 'pm'); 'o3' -> (None, 'o3')."""
     if "/" not in var_path:
         return None, var_path
     group, _, name = var_path.rpartition("/")
@@ -16,7 +16,7 @@ class NetCDFReader(Reader):
     format = "netcdf"
 
     def _walk(self, path: str):
-        """递归遍历所有 group，返回 [(var_path, shape, dims)]。"""
+        """Recursively walk all groups, returning [(var_path, shape, dims)]."""
         root = netCDF4.Dataset(path, "r")
         out = []
 
@@ -53,9 +53,10 @@ class NetCDFReader(Reader):
     def read_slice(self, path: str, var_path: str, slices: dict) -> xr.DataArray:
         group, name = _split_var_path(var_path)
         try:
-            # chunks=None：用 netCDF4 惰性数组（非 dask）。isel 整数切片走 netCDF4
-            # 底层部分读取，只读需要的部分；且不触发 dask auto-rechunk（含 object/char
-            # 字符串变量的文件用 chunks="auto" 会崩溃）。
+            # chunks=None: use netCDF4 lazy arrays (not dask). Integer isel slices
+            # go through netCDF4's partial read, reading only what is needed; this
+            # also avoids dask auto-rechunk (which crashes on files with object/char
+            # string variables under chunks="auto").
             ds = xr.open_dataset(path, group=group, chunks=None)
         except Exception as e:
             raise OpenFailed(f"failed to open netCDF: {path}: {e}") from e
@@ -65,7 +66,7 @@ class NetCDFReader(Reader):
             da = ds[name]
             try:
                 out = da.isel(**{k: v for k, v in slices.items() if k in da.dims})
-                # chunks=None 时越界索引可能到 compute 才抛（netCDF4 惰性数组）
+                # with chunks=None, an out-of-bounds index may only raise at compute time (netCDF4 lazy arrays)
                 result = out.compute()
             except (IndexError, KeyError, ValueError) as e:
                 raise SliceOutOfBounds(f"slice out of bounds: {slices}: {e}") from e

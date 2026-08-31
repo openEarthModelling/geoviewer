@@ -2,7 +2,7 @@ import panel as pn
 
 
 def build_layout(panels: dict) -> pn.Column:
-    """三栏固定布局。panels 键：file_browser/variable_panel/map_panel/controls/metadata。"""
+    """Fixed three-column layout. Panel keys: file_browser/variable_panel/map_panel/controls/metadata."""
     left = pn.Column(
         pn.pane.Markdown("### 文件与变量"),
         panels["file_browser"],

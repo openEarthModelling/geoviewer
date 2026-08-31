@@ -25,14 +25,15 @@ def get_reader(fmt: str):
 
 
 def _sniff(path: str) -> str:
-    """用文件头魔数判断格式；失败抛 FormatNotRecognized。"""
+    """Detect format by file magic; raises FormatNotRecognized on failure."""
     with open(path, "rb") as f:
         head = f.read(8)
     if head.startswith(b"GRIB"):
         return "grib"
     if head.startswith(b"\x89HDF\r\n\x1a\n"):
-        # HDF5 容器：可能是纯 HDF5 或 netCDF-4。netCDF-4 根 group 带 _NCProperties 属性。
-        # 该属性是隐藏属性，netCDF4 的 ncattrs() 不会列出，须用 h5py 的 attrs 判断。
+        # HDF5 container: may be plain HDF5 or netCDF-4. The netCDF-4 root group
+        # carries a _NCProperties attribute. It is hidden (netCDF4's ncattrs()
+        # does not list it), so check via h5py's attrs.
         try:
             import h5py
             with h5py.File(path, "r") as f:
@@ -47,7 +48,7 @@ def _sniff(path: str) -> str:
 
 
 def identify(path: str) -> str:
-    """内容嗅探优先（魔数是权威信号），扩展名作为回退。"""
+    """Content sniffing first (magic is the authoritative signal), extension as fallback."""
     try:
         return _sniff(path)
     except FormatNotRecognized:

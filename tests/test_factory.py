@@ -33,7 +33,7 @@ def test_identify_by_extension_h5(tmp_path):
 
 
 def test_identify_wrong_extension_sniffs(tmp_path):
-    """扩展名是 .h5 但实际是 netCDF，靠嗅探纠正。"""
+    """Extension is .h5 but the content is netCDF; sniffing corrects it."""
     p = tmp_path / "actually.nc4.h5"
     _make_nc(str(p))
     assert identify(str(p)) == "netcdf"

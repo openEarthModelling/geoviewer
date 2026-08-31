@@ -44,7 +44,7 @@ class GRIBReader(Reader):
             raise VariableNotFound(f"invalid GRIB var_path: {var_path}") from e
 
     def _peek_dims(self, path: str, short: str, typ: str, lvl: int) -> tuple:
-        """用小开销 open_dataset 读取单个 field 的 dims/shape；失败回退空。"""
+        """Read a single field's dims/shape with a lightweight open_dataset; fall back to empty on failure."""
         try:
             with xr.open_dataset(
                 path,

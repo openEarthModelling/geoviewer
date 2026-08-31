@@ -8,7 +8,7 @@ from readers.netcdf import NetCDFReader
 
 @pytest.fixture
 def nc_flat(tmp_path):
-    """扁平根 group 的 netCDF，含 lat/lon/time/lev 4 维变量。"""
+    """netCDF with a flat root group, containing a 4-D variable with lat/lon/time/lev."""
     p = tmp_path / "flat.nc"
     ds = netCDF4.Dataset(p, "w")
     ds.createDimension("time", 3)
@@ -24,7 +24,7 @@ def nc_flat(tmp_path):
 
 @pytest.fixture
 def nc_group(tmp_path):
-    """带嵌套 group 的 netCDF-4。"""
+    """netCDF-4 with a nested group."""
     p = tmp_path / "group.nc"
     ds = netCDF4.Dataset(p, "w")
     g = ds.createGroup("sub")
@@ -71,10 +71,11 @@ def test_slice_out_of_bounds(nc_flat):
 
 
 def test_read_slice_with_string_var(tmp_path):
-    """含 char 字符串变量的文件：read_slice 数值变量不因 dask auto-rechunk 崩溃。
+    """A file with a char string variable: read_slice on a numeric variable must not crash from dask auto-rechunk.
 
-    回归：CESM2/CAM 文件含 object/char 字符串变量时，chunks='auto' 会抛
-    NotImplementedError（无法估算 object dtype 大小）。chunks=None 应正常读取。
+    Regression: CESM2/CAM files contain object/char string variables; under
+    chunks='auto' those raise NotImplementedError (object dtype size cannot be
+    estimated). chunks=None should read normally.
     """
     p = tmp_path / "with_str.nc"
     ds = netCDF4.Dataset(p, "w")

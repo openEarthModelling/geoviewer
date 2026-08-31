@@ -44,9 +44,10 @@ def test_variable_panel_set():
 
 
 def test_variable_panel_defaults_to_mapable():
-    """默认选中第一个能被 auto_assign 识别出经纬度（x/y）的可绘图变量。
+    """Defaults to the first plottable variable whose dims auto_assign recognizes as lat/lon (x/y).
 
-    回归：lat 坐标变量、time_bnds（time,nbnd 非经纬度）不应被默认选中，而应选 TREFHT。
+    Regression: the lat coordinate and time_bnds (time,nbnd, not lat/lon) must
+    not be selected by default; TREFHT should be.
     """
     infos = [
         VarInfo(path="lat", name="lat", shape=(5,), dims=("lat",), is_plottable=False, format="netcdf"),
@@ -86,7 +87,7 @@ def test_metadata_panel(tmp_path):
 
 
 def test_end_to_end_nc(tmp_path):
-    """完整管线：identify -> list -> read_slice -> auto_assign。"""
+    """Full pipeline: identify -> list -> read_slice -> auto_assign."""
     p = tmp_path / "e2e.nc"
     ds = netCDF4.Dataset(p, "w")
     for d in ("time", "lat", "lon"):
@@ -104,13 +105,13 @@ def test_end_to_end_nc(tmp_path):
 
 
 def test_app_integration_4d(tmp_path):
-    """驱动 app.py 回调：打开 4-D netCDF -> 变量识别 -> 地图渲染。"""
+    """Drive the app.py callbacks: open a 4-D netCDF -> variable detection -> map render."""
     try:
         import app
     except ImportError:
         pytest.skip("app cannot be imported in this environment")
 
-    # 4-D 变量 (time, lev, lat, lon)
+    # 4-D variable (time, lev, lat, lon)
     p = tmp_path / "app_it.nc"
     ds = netCDF4.Dataset(p, "w")
     for d, n in (("time", 2), ("lev", 3), ("lat", 4), ("lon", 5)):
@@ -119,7 +120,7 @@ def test_app_integration_4d(tmp_path):
     v[:] = np.arange(2 * 3 * 4 * 5).reshape(2, 3, 4, 5)
     ds.close()
 
-    # 将临时目录加入目录白名单，使 catalog.resolve 能命中
+    # Add the temp dir to the whitelist so catalog.resolve can hit it
     app.catalog.roots.append(os.path.realpath(str(tmp_path)))
     app.fb.file_select.value = str(p)
 

@@ -5,7 +5,7 @@ import xarray as xr
 
 
 class ReaderError(Exception):
-    """readers 层统一异常基类。"""
+    """Unified exception base class for the readers layer."""
 
 
 class FormatNotRecognized(ReaderError):
@@ -26,16 +26,16 @@ class SliceOutOfBounds(ReaderError):
 
 @dataclass
 class VarInfo:
-    path: str                 # 唯一标识；netCDF/HDF5 用 '/group/var'，GRIB 用 'short/typeOfLevel/level'
-    name: str                 # 展示名
-    shape: tuple              # 变量形状
-    dims: tuple               # 维度名
-    is_plottable: bool        # 是否可绘制（ndim >= 2）
+    path: str                 # unique id; netCDF/HDF5 use '/group/var', GRIB uses 'short/typeOfLevel/level'
+    name: str                 # display name
+    shape: tuple              # variable shape
+    dims: tuple               # dimension names
+    is_plottable: bool        # whether plottable (ndim >= 2)
     format: str               # 'netcdf' | 'hdf5' | 'grib'
 
 
 class Reader(Protocol):
-    """多格式读取统一协议。三个实现类都遵守此接口。"""
+    """Unified multi-format reader protocol. All three implementations follow this interface."""
     format: str
 
     def list_variables(self, path: str) -> list[VarInfo]: ...

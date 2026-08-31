@@ -3,7 +3,7 @@ import panel as pn
 
 
 class MapPanel(pn.Column):
-    """地图面板：用 hvplot 渲染 2D 数据切片。"""
+    """Map panel: renders 2D data slices with hvplot."""
 
     def __init__(self):
         self.pane = pn.pane.HoloViews(sizing_mode="stretch_both")
@@ -11,7 +11,7 @@ class MapPanel(pn.Column):
         super().__init__(self.pane, self.message)
 
     def set_data(self, path, var_path, da, x, y, cmap="turbo", clim=None):
-        # 无名 DataArray 会让 holoviews 缺 value 维度，先补名
+        # An unnamed DataArray makes holoviews miss the value dimension, so name it first
         if getattr(da, "name", None) is None:
             da = da.rename(var_path or "value")
         try:
@@ -22,7 +22,7 @@ class MapPanel(pn.Column):
                 width=700, height=500,
             )
         except Exception:
-            # datashader/numba 不可用（如 numpy 2.4 与 numba 不兼容）时退化为普通渲染
+            # Fall back to plain rendering when datashader/numba is unavailable (e.g. numpy 2.4 vs numba incompatibility)
             plot = da.hvplot(
                 x=x, y=y,
                 cmap=cmap,
@@ -39,6 +39,6 @@ class MapPanel(pn.Column):
         self.message.object = ""
 
     def show_message(self, text: str):
-        """无经纬度坐标时以 Markdown 文本降级提示，替代静默清空。"""
+        """Show a Markdown message when no lat/lon coordinates exist, instead of silently clearing."""
         self.pane.object = None
         self.message.object = text
