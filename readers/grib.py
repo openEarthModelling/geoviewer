@@ -43,6 +43,28 @@ class GRIBReader(Reader):
         except ValueError as e:
             raise VariableNotFound(f"invalid GRIB var_path: {var_path}") from e
 
+    def _peek_dims(self, path: str, short: str, typ: str, lvl: int) -> tuple:
+        """用小开销 open_dataset 读取单个 field 的 dims/shape；失败回退空。"""
+        try:
+            with xr.open_dataset(
+                path,
+                engine="cfgrib",
+                backend_kwargs={
+                    "filter_by_keys": {
+                        "shortName": short,
+                        "typeOfLevel": typ,
+                        "level": lvl,
+                    },
+                    "indexpath": "",
+                },
+            ) as ds:
+                da = ds[short] if short in ds else next(iter(ds.data_vars.values()), None)
+                if da is None:
+                    return (), ()
+                return tuple(da.dims), tuple(da.shape)
+        except Exception:
+            return (), ()
+
     def list_variables(self, path: str) -> list[VarInfo]:
         seen = set()
         infos = []
@@ -51,12 +73,13 @@ class GRIBReader(Reader):
             if vp in seen:
                 continue
             seen.add(vp)
+            dims, shape = self._peek_dims(path, short, typ, lvl)
             infos.append(VarInfo(
                 path=vp,
                 name=short,
-                shape=(),          # GRIB shape is known only after read
-                dims=(),
-                is_plottable=True,
+                shape=shape,
+                dims=dims,
+                is_plottable=len(shape) >= 2,
                 format=self.format,
             ))
         return infos

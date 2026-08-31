@@ -1,4 +1,5 @@
 import netCDF4
+import os
 import numpy as np
 import panel as pn
 import pytest
@@ -85,3 +86,31 @@ def test_end_to_end_nc(tmp_path):
     role = auto_assign(list(da.dims))
     assert role.x == "lon"
     assert role.y == "lat"
+
+
+def test_app_integration_4d(tmp_path):
+    """驱动 app.py 回调：打开 4-D netCDF -> 变量识别 -> 地图渲染。"""
+    try:
+        import app
+    except ImportError:
+        pytest.skip("app cannot be imported in this environment")
+
+    # 4-D 变量 (time, lev, lat, lon)
+    p = tmp_path / "app_it.nc"
+    ds = netCDF4.Dataset(p, "w")
+    for d, n in (("time", 2), ("lev", 3), ("lat", 4), ("lon", 5)):
+        ds.createDimension(d, n)
+    v = ds.createVariable("v", "f8", ("time", "lev", "lat", "lon"))
+    v[:] = np.arange(2 * 3 * 4 * 5).reshape(2, 3, 4, 5)
+    ds.close()
+
+    # 将临时目录加入目录白名单，使 catalog.resolve 能命中
+    app.catalog.roots.append(os.path.realpath(str(tmp_path)))
+    app.fb.file_select.value = str(p)
+
+    assert app.vp.var_select.options
+    assert app.vp.var_select.value == "v"
+    app.vp.var_select.value = "v"
+
+    assert app.state["auto_role"].x == "lon"
+    assert app.mp.pane.object is not None

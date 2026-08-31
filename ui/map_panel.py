@@ -7,7 +7,8 @@ class MapPanel(pn.Column):
 
     def __init__(self):
         self.pane = pn.pane.HoloViews(sizing_mode="stretch_both")
-        super().__init__(self.pane)
+        self.message = pn.pane.Markdown("")
+        super().__init__(self.pane, self.message)
 
     def set_data(self, path, var_path, da, x, y, cmap="turbo", clim=None):
         # 无名 DataArray 会让 holoviews 缺 value 维度，先补名
@@ -30,7 +31,14 @@ class MapPanel(pn.Column):
             )
         if clim is not None:
             plot = plot.opts(clim=clim)
+        self.message.object = ""
         self.pane.object = plot
 
     def clear(self):
         self.pane.object = None
+        self.message.object = ""
+
+    def show_message(self, text: str):
+        """无经纬度坐标时以 Markdown 文本降级提示，替代静默清空。"""
+        self.pane.object = None
+        self.message.object = text

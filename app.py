@@ -41,10 +41,12 @@ def render():
         role = state["auto_role"]
     if role is None:
         return
-    # 取当前时间步切片
+    # 取当前时间步/层切片，固定维度按索引 0 切
     slices = {}
     if role.time and role.time in state["dims"]:
         slices[role.time] = ctl.time_slider.value
+    if role.z and role.z in state["dims"]:
+        slices[role.z] = ctl.level_slider.value
     for d, idx in role.fixed.items():
         slices[d] = idx
     da = slice_svc.get(state["file"], state["var"], slices)
@@ -52,7 +54,7 @@ def render():
         mp.set_data(state["file"], state["var"], da, x=role.x, y=role.y,
                     cmap=ctl.cmap_select.value)
     else:
-        mp.clear()
+        mp.show_message("该变量无经纬度坐标，无法绘制地图")
 
 
 def _watch_role_widgets():
@@ -68,14 +70,22 @@ def on_file(event):
     fmt = identify(full)
     reader = get_reader(fmt)
     infos = reader.list_variables(full)
-    vp.set_variables(infos)
+    # 先落文件状态并清空旧变量/面板，再填充变量列表：set_variables 会同步
+    # 赋值 var_select.value 并触发 on_var，须保证 on_var 读到的是新文件。
     state["file"] = full
     state["fmt"] = fmt
+    state["var"] = None
+    state["auto_role"] = None
+    mp.clear()
+    mdp.clear()
+    vp.set_variables(infos)
     status_bar.object = f"格式：{fmt} · 文件：{event.new} · 加载：就绪"
 
 
 def on_var(event):
     if event.new is None:
+        return
+    if state["file"] is None:
         return
     state["var"] = event.new
     info = vp.get_info(event.new)
@@ -90,6 +100,8 @@ def on_var(event):
     _watch_role_widgets()
     if role.time and role.time in state["sizes"]:
         ctl.time_slider.end = state["sizes"][role.time] - 1
+    if role.z and role.z in state["sizes"]:
+        ctl.level_slider.end = state["sizes"][role.z] - 1
     mdp.show(state["file"], state["var"])
     status_bar.object = f"格式：{state['fmt']} · dims：{info.shape} · 加载：就绪"
     render()
@@ -111,6 +123,7 @@ on_var = safe(on_var)
 fb.file_select.param.watch(on_file, "value")
 vp.var_select.param.watch(on_var, "value")
 ctl.time_slider.param.watch(lambda e: render(), "value")
+ctl.level_slider.param.watch(lambda e: render(), "value")
 ctl.cmap_select.param.watch(lambda e: render(), "value")
 ctl.mode_toggle.param.watch(lambda e: render(), "value")
 

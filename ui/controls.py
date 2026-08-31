@@ -13,13 +13,15 @@ class Controls(pn.Column):
             name="模式", options=["自动", "手动"], value="自动"
         )
         self.time_slider = pn.widgets.IntSlider(name="时间步", start=0, end=0, value=0)
+        self.level_slider = pn.widgets.IntSlider(name="层", start=0, end=0, value=0)
         self.cmap_select = pn.widgets.Select(
             name="调色板",
             options=["turbo", "viridis", "cividis", "magma", "inferno", "RdBu_r"],
             value="turbo",
         )
         self.role_widgets = {}
-        super().__init__(self.mode_toggle, self.time_slider, self.cmap_select)
+        super().__init__(self.mode_toggle, self.time_slider, self.level_slider,
+                         self.cmap_select)
 
     def set_dims(self, dims: list[str], role: RoleAssignment = None):
         """为每个维度建角色选择下拉框；role 缺省时用 auto_assign 推断。"""
@@ -34,6 +36,10 @@ class Controls(pn.Column):
         self.role_widgets = {}
         self.time_slider.start = 0
         self.time_slider.end = 0
+        self.time_slider.value = 0
+        self.level_slider.start = 0
+        self.level_slider.end = 0
+        self.level_slider.value = 0
         for d in dims:
             # 角色标签（"x"/"y"/"z"/"time"/"fixed"），不是维度名
             label = ("x" if d == role.x else
