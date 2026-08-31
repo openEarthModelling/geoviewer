@@ -1,7 +1,7 @@
 import netCDF4
 import xarray as xr
 
-from .base import Reader, VarInfo, OpenFailed, VariableNotFound, SliceOutOfBounds
+from .base import OpenFailed, Reader, SliceOutOfBounds, VariableNotFound, VarInfo
 
 
 def _split_var_path(var_path: str) -> tuple:

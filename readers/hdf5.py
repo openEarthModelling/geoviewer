@@ -2,7 +2,7 @@ import h5py
 import numpy as np
 import xarray as xr
 
-from .base import Reader, VarInfo, VariableNotFound, SliceOutOfBounds, OpenFailed
+from .base import OpenFailed, Reader, SliceOutOfBounds, VariableNotFound, VarInfo
 
 
 class HDF5Reader(Reader):

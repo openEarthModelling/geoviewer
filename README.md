@@ -16,10 +16,22 @@ Browse a whitelisted server directory, pick a variable, and get an interactive l
 
 ## Installation
 
-Requires Python 3.10+.
+Requires Python 3.11+.
 
 ```bash
-pip install -r requirements.txt
+pip install .
+```
+
+For an editable install that includes the test/lint tooling:
+
+```bash
+pip install -e ".[dev]"
+```
+
+With [uv](https://docs.astral.sh/uv/):
+
+```bash
+uv pip install .
 ```
 
 GRIB support needs the eccodes C library; the `eccodes` wheel bundles it, or install it system-wide (`conda install -c conda-forge eccodes`).

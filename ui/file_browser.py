@@ -16,10 +16,10 @@ class FileBrowser(pn.Column):
     def __init__(self, catalog: Catalog):
         self.catalog = catalog
         self.path_input = pn.widgets.TextInput(
-            name="路径", placeholder="绝对/相对路径，回车跳转"
+            label="路径", placeholder="绝对/相对路径，回车跳转"
         )
-        self.dir_select = pn.widgets.Select(name="子目录", options={}, value=None)
-        self.file_select = pn.widgets.Select(name="文件", options={}, value=None)
+        self.dir_select = pn.widgets.Select(label="子目录", options={}, value=None)
+        self.file_select = pn.widgets.Select(label="文件", options={}, value=None)
         self.msg = pn.pane.Markdown("", sizing_mode="stretch_width")
         super().__init__(self.path_input, self.dir_select, self.file_select, self.msg)
 

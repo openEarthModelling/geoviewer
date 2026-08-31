@@ -1,20 +1,21 @@
-import netCDF4
 import os
+
+import netCDF4
 import numpy as np
 import panel as pn
 import pytest
 import xarray as xr
 
+from readers import get_reader, identify
+from readers.base import VarInfo
 from services.catalog import Catalog
 from services.dimension import auto_assign
 from ui.controls import Controls
 from ui.file_browser import FileBrowser
-from ui.map_panel import MapPanel
-from ui.variable_panel import VariablePanel
 from ui.layout import build_layout
+from ui.map_panel import MapPanel
 from ui.metadata_panel import MetadataPanel
-from readers import identify, get_reader
-from readers.base import VarInfo
+from ui.variable_panel import VariablePanel
 
 
 def test_build_layout_returns_panel():

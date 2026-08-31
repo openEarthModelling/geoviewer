@@ -2,7 +2,7 @@ import h5py
 import numpy as np
 import pytest
 
-from readers.base import VariableNotFound, SliceOutOfBounds
+from readers.base import SliceOutOfBounds, VariableNotFound
 from readers.hdf5 import HDF5Reader
 
 

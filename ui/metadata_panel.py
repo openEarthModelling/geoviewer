@@ -1,6 +1,6 @@
 import panel as pn
 
-from readers import identify, get_reader
+from readers import get_reader, identify
 
 
 class MetadataPanel(pn.Column):

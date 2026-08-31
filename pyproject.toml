@@ -1,0 +1,45 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "geoviewer"
+version = "0.1.0"
+description = "A browser-based viewer for geospatial scientific data (netCDF, HDF5, GRIB), inspired by NASA Panoply."
+readme = "README.md"
+requires-python = ">=3.11"
+license = "Apache-2.0"
+authors = [{ name = "openEarthModelling" }]
+keywords = ["netcdf", "hdf5", "grib", "xarray", "panel", "geospatial", "visualization"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: Atmospheric Science",
+]
+dependencies = [
+    "xarray>=2025.10",
+    "netCDF4>=1.7",
+    "h5py>=3.15",
+    "cfgrib>=0.9.15",
+    "eccodes>=2.47",
+    "panel>=1.8",
+    "hvplot>=0.12",
+    "holoviews>=1.22",
+    "datashader>=0.18",
+    "bokeh>=3.8",
+    "dask",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8",
+    "ruff>=0.12",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["readers", "services", "ui"]

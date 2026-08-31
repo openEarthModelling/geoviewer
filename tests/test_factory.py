@@ -3,7 +3,7 @@ import netCDF4
 import numpy as np
 import pytest
 
-from readers import identify, get_reader
+from readers import get_reader, identify
 from readers.base import FormatNotRecognized
 
 
