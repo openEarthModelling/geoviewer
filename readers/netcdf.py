@@ -53,7 +53,10 @@ class NetCDFReader(Reader):
     def read_slice(self, path: str, var_path: str, slices: dict) -> xr.DataArray:
         group, name = _split_var_path(var_path)
         try:
-            ds = xr.open_dataset(path, group=group, chunks="auto")
+            # chunks=None：用 netCDF4 惰性数组（非 dask）。isel 整数切片走 netCDF4
+            # 底层部分读取，只读需要的部分；且不触发 dask auto-rechunk（含 object/char
+            # 字符串变量的文件用 chunks="auto" 会崩溃）。
+            ds = xr.open_dataset(path, group=group, chunks=None)
         except Exception as e:
             raise OpenFailed(f"failed to open netCDF: {path}: {e}") from e
         with ds:
@@ -62,9 +65,10 @@ class NetCDFReader(Reader):
             da = ds[name]
             try:
                 out = da.isel(**{k: v for k, v in slices.items() if k in da.dims})
+                # chunks=None 时越界索引可能到 compute 才抛（netCDF4 惰性数组）
+                result = out.compute()
             except (IndexError, KeyError, ValueError) as e:
                 raise SliceOutOfBounds(f"slice out of bounds: {slices}: {e}") from e
-            result = out.compute()
         return result
 
     def read_metadata(self, path: str, var_path: str) -> dict:

@@ -68,3 +68,28 @@ def test_slice_out_of_bounds(nc_flat):
     r = NetCDFReader()
     with pytest.raises(SliceOutOfBounds):
         r.read_slice(nc_flat, "o3", {"time": 99})
+
+
+def test_read_slice_with_string_var(tmp_path):
+    """含 char 字符串变量的文件：read_slice 数值变量不因 dask auto-rechunk 崩溃。
+
+    回归：CESM2/CAM 文件含 object/char 字符串变量时，chunks='auto' 会抛
+    NotImplementedError（无法估算 object dtype 大小）。chunks=None 应正常读取。
+    """
+    p = tmp_path / "with_str.nc"
+    ds = netCDF4.Dataset(p, "w")
+    ds.createDimension("time", 2)
+    ds.createDimension("lat", 3)
+    ds.createDimension("lon", 4)
+    ds.createDimension("nchar", 12)
+    sv = ds.createVariable("description", "S1", ("nchar",))
+    sv[:] = np.array(list("temperature!"), dtype="S1")
+    v = ds.createVariable("t2m", "f8", ("time", "lat", "lon"))
+    v[:] = np.arange(24).reshape(2, 3, 4)
+    ds.close()
+
+    r = NetCDFReader()
+    da = r.read_slice(str(p), "t2m", {"time": 0})
+    assert da.shape == (3, 4)
+    assert da.values[0, 0] == 0.0
+    assert da.values[2, 3] == 11.0
