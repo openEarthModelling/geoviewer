@@ -1,7 +1,11 @@
+import numpy as np
 import panel as pn
+import xarray as xr
 
 from services.catalog import Catalog
+from ui.controls import Controls
 from ui.file_browser import FileBrowser
+from ui.map_panel import MapPanel
 from ui.variable_panel import VariablePanel
 from ui.layout import build_layout
 from readers.base import VarInfo
@@ -31,3 +35,18 @@ def test_variable_panel_set():
     vp.set_variables([VarInfo(path="v", name="v", shape=(2, 2),
                               dims=("x", "y"), is_plottable=True, format="netcdf")])
     assert vp.var_select.value == "v"
+
+
+def test_map_panel_render():
+    mp = MapPanel()
+    da = xr.DataArray(np.zeros((4, 5)), dims=("lat", "lon"))
+    mp.set_data("/tmp/a.nc", "v", da, x="lon", y="lat")
+    assert mp.pane is not None
+
+
+def test_controls_time_slider():
+    c = Controls()
+    c.set_dims(["time", "lat", "lon"])
+    assert c.time_slider.value == 0
+    c.time_slider.value = 2
+    assert c.time_slider.value == 2

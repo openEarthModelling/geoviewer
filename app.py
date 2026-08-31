@@ -6,34 +6,98 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import panel as pn
 
+from readers import identify, get_reader
 from services.catalog import Catalog
+from services.dimension import auto_assign
+from services.slice import SliceService
+from ui.controls import Controls
 from ui.file_browser import FileBrowser
-from ui.variable_panel import VariablePanel
 from ui.layout import build_layout
+from ui.map_panel import MapPanel
+from ui.variable_panel import VariablePanel
 
 pn.extension()
 
 roots = [p for p in os.environ.get("NC_VIEWER_ROOTS", "/data/GEOSChem").split(":") if p]
 catalog = Catalog(roots)
+slice_svc = SliceService()
 fb = FileBrowser(catalog)
 vp = VariablePanel()
+mp = MapPanel()
+ctl = Controls()
 
-# 选文件后枚举变量
+state = {"file": None, "var": None, "dims": [], "sizes": {}, "auto_role": None}
+
+
+def render():
+    if state["file"] is None or state["var"] is None:
+        return
+    if ctl.mode_toggle.value == "手动":
+        role = ctl.build_role()
+    else:
+        role = state["auto_role"]
+    if role is None:
+        return
+    # 取当前时间步切片
+    slices = {}
+    if role.time and role.time in state["dims"]:
+        slices[role.time] = ctl.time_slider.value
+    for d, idx in role.fixed.items():
+        slices[d] = idx
+    da = slice_svc.get(state["file"], state["var"], slices)
+    if role.x and role.y:
+        mp.set_data(state["file"], state["var"], da, x=role.x, y=role.y,
+                    cmap=ctl.cmap_select.value)
+    else:
+        mp.clear()
+
+
+def _watch_role_widgets():
+    # 角色下拉框在 set_dims 时动态创建，须在每次重建后重新挂监听
+    for w in ctl.role_widgets.values():
+        w.param.watch(lambda e: render(), "value")
+
+
 def on_file(event):
     if event.new is None:
         return
     full = catalog.resolve(event.new)
-    from readers import identify, get_reader
     reader = get_reader(identify(full))
-    vp.set_variables(reader.list_variables(full))
+    infos = reader.list_variables(full)
+    vp.set_variables(infos)
+    state["file"] = full
+
+
+def on_var(event):
+    if event.new is None:
+        return
+    state["var"] = event.new
+    info = vp.get_info(event.new)
+    if info is None:
+        return
+    # 用 VarInfo 的 dims/shape 做维度识别，不读入整个变量
+    state["dims"] = list(info.dims)
+    state["sizes"] = dict(zip(info.dims, info.shape))
+    role = auto_assign(state["dims"])
+    state["auto_role"] = role
+    ctl.set_dims(state["dims"], role)
+    _watch_role_widgets()
+    if role.time and role.time in state["sizes"]:
+        ctl.time_slider.end = state["sizes"][role.time] - 1
+    render()
+
 
 fb.file_select.param.watch(on_file, "value")
+vp.var_select.param.watch(on_var, "value")
+ctl.time_slider.param.watch(lambda e: render(), "value")
+ctl.cmap_select.param.watch(lambda e: render(), "value")
+ctl.mode_toggle.param.watch(lambda e: render(), "value")
 
 layout = build_layout({
     "file_browser": fb,
     "variable_panel": vp,
-    "map_panel": pn.pane.Markdown("（选择变量后显示地图）"),
-    "controls": pn.pane.Markdown("（绘图控制）"),
+    "map_panel": mp,
+    "controls": ctl,
     "metadata": pn.pane.Markdown("（元数据）"),
 })
 layout.servable()
