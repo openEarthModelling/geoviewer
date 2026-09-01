@@ -23,7 +23,7 @@ from ui.map_panel import MapPanel
 from ui.metadata_panel import MetadataPanel
 from ui.variable_panel import VariablePanel
 
-pn.extension()
+pn.extension(notifications=True)
 
 roots = [p for p in os.environ.get("NC_VIEWER_ROOTS", ".").split(":") if p]
 catalog = Catalog(roots)

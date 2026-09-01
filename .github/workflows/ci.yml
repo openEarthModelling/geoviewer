@@ -19,6 +19,12 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
+      - name: Cache Natural Earth data
+        uses: actions/cache@v4
+        with:
+          path: ~/.local/share/cartopy
+          key: natural-earth-110m
+
       - name: Install dependencies
         run: pip install -e ".[dev]"
 
