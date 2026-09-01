@@ -52,6 +52,18 @@ To serve on a remote machine, use an SSH tunnel:
 ssh -L 5006:127.0.0.1:5006 user@host
 ```
 
+### Natural Earth feature data (first render)
+
+Coastlines, borders and the graticule come from Natural Earth data, which
+cartopy downloads on first use and caches in `~/.local/share/cartopy`. Behind
+a blocking proxy the download fails; the map still renders, just without the
+overlays (a warning names the unavailable features). To pre-seed the cache on
+a proxied server, clear the proxy variables and render any map once:
+
+```bash
+env -u http_proxy -u https_proxy python -m panel serve app.py --port 5006
+```
+
 ### Environment variables
 
 | Variable | Default | Description |

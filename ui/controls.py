@@ -20,9 +20,13 @@ class Controls(pn.Column):
             options=["turbo", "viridis", "cividis", "magma", "inferno", "RdBu_r"],
             value="turbo",
         )
+        self.coastline_toggle = pn.widgets.Checkbox(label="海岸线", value=True)
+        self.borders_toggle = pn.widgets.Checkbox(label="国界", value=True)
+        self.grid_toggle = pn.widgets.Checkbox(label="经纬网", value=True)
         self.role_widgets = {}
         super().__init__(self.mode_toggle, self.time_slider, self.level_slider,
-                         self.cmap_select)
+                         self.cmap_select, self.coastline_toggle,
+                         self.borders_toggle, self.grid_toggle)
 
     def set_dims(self, dims: list[str], role: RoleAssignment = None):
         """Build a role selector per dimension; infer via auto_assign when role is absent."""
@@ -70,3 +74,11 @@ class Controls(pn.Column):
             elif v == "fixed":
                 ra.fixed[d] = 0
         return ra
+
+    def feature_flags(self) -> dict:
+        """Current cartopy feature toggle state for the map panel."""
+        return {
+            "coastline": self.coastline_toggle.value,
+            "borders": self.borders_toggle.value,
+            "grid": self.grid_toggle.value,
+        }
