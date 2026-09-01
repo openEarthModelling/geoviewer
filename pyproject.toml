@@ -32,6 +32,8 @@ dependencies = [
     "holoviews>=1.22",
     "datashader>=0.18",
     "bokeh>=3.8",
+    "cartopy>=0.24",
+    "geoviews>=1.15",
     "dask",
 ]
 
