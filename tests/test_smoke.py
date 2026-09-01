@@ -64,7 +64,7 @@ def test_map_panel_render():
     mp = MapPanel()
     da = xr.DataArray(np.zeros((4, 5)), dims=("lat", "lon"))
     mp.set_data("/tmp/a.nc", "v", da, x="lon", y="lat")
-    assert mp.pane is not None
+    assert mp.pane.object is not None
 
 
 def test_controls_time_slider():

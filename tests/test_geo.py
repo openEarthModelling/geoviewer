@@ -121,3 +121,20 @@ def test_render_geo_map_falls_back_without_datashader(da, monkeypatch):
     assert unavailable == []
     rendered = hv.renderer("bokeh").get_plot(plot)
     assert any(t.__class__.__name__ == "HoverTool" for t in rendered.state.tools)
+
+
+def test_resolve_caches_success(monkeypatch):
+    # Second resolve of the same feature must not re-render (hot path: every map render)
+    _fake_features(monkeypatch)
+    feature = geo.FEATURES["coastline"]
+    geo._resolve(feature)
+    renders = []
+    real_renderer = geo.hv.renderer
+
+    def counting_renderer(backend):
+        renders.append(backend)
+        return real_renderer(backend)
+
+    monkeypatch.setattr(geo.hv, "renderer", counting_renderer)
+    geo._resolve(feature)
+    assert renders == []

@@ -32,14 +32,23 @@ def build_element(da, x, y, *, crs=None):
     return gv.Dataset(da, kdims=[x, y], vdims=[da.name], crs=crs or ccrs.PlateCarree())
 
 
+_resolved: dict[int, object] = {}
+
+
 def _resolve(feature):
     """Force feature geometry load now instead of at pane render time.
 
     Rendering the feature headlessly triggers the Natural Earth download here,
     where a failure is catchable -- the map pane must never die because a
     coastline download failed (spike-verified: offline raises URLError here).
+
+    Successful resolutions are cached by feature identity: geometry never
+    changes, and this runs on every map render (slider/cmap/toggle).
     """
+    if id(feature) in _resolved:
+        return feature
     hv.renderer("bokeh").get_plot(feature)
+    _resolved[id(feature)] = feature
     return feature
 
 
