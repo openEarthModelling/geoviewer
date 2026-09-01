@@ -131,3 +131,10 @@ def test_app_integration_4d(tmp_path):
 
     assert app.state["auto_role"].x == "lon"
     assert app.mp.pane.object is not None
+
+
+def test_controls_feature_flags():
+    c = Controls()
+    assert c.feature_flags() == {"coastline": True, "borders": True, "grid": True}
+    c.borders_toggle.value = False
+    assert c.feature_flags()["borders"] is False
