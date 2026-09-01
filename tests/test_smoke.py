@@ -138,3 +138,24 @@ def test_controls_feature_flags():
     assert c.feature_flags() == {"coastline": True, "borders": True, "grid": True}
     c.borders_toggle.value = False
     assert c.feature_flags()["borders"] is False
+
+
+def test_map_panel_unavailable_features_do_not_raise(monkeypatch):
+    """Degradation contract: offline features warn (or stay silent) but the map still renders."""
+    import holoviews as hv
+
+    import ui.map_panel as map_panel
+
+    def fake_render(da, x, y, *, features, cmap, clim=None, **kwargs):
+        # A real element: pn.pane.HoloViews eagerly processes .object, so a
+        # plain string stand-in would raise inside the pane instead
+        return hv.Curve([0, 1], label="PLOT"), ["coastline", "borders"]
+
+    monkeypatch.setattr(map_panel, "render_geo_map", fake_render)
+    mp = map_panel.MapPanel()
+    da = xr.DataArray(np.zeros((4, 5)), dims=("lat", "lon"))
+    mp.set_data("/tmp/a.nc", "v", da, x="lon", y="lat",
+                features={"coastline": True, "borders": True, "grid": False})
+    assert mp.pane.object is not None
+    assert mp.pane.object.label == "PLOT"
+    assert mp.message.object == ""

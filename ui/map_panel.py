@@ -20,7 +20,9 @@ class MapPanel(pn.Column):
                                            cmap=cmap, clim=clim)
         if unavailable:
             # The data layer rendered fine; only the overlays could not be loaded
-            pn.state.notifications.warning(f"地理要素离线不可用:{', '.join(unavailable)}")
+            # (pn.state.notifications is None outside a server session)
+            if pn.state.notifications is not None:
+                pn.state.notifications.warning(f"地理要素离线不可用:{', '.join(unavailable)}")
         self.message.object = ""
         self.pane.object = plot
 
