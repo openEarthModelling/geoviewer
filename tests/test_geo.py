@@ -5,7 +5,7 @@ import xarray as xr
 from cartopy import crs as ccrs
 
 import ui.geo as geo
-from ui.geo import build_element
+from ui.geo import build_element, render_geo_map
 
 hv.extension("bokeh")
 
@@ -88,3 +88,36 @@ def test_feature_overlay_ignores_unknown_names(monkeypatch):
     overlay, unavailable = geo.feature_overlay({"lakes": True})
     assert overlay is None
     assert unavailable == []
+
+
+ALL_OFF = {"coastline": False, "borders": False, "grid": False}
+
+
+def test_render_geo_map_returns_renderable_plot(da):
+    plot, unavailable = render_geo_map(da, "lon", "lat", features=ALL_OFF)
+    assert unavailable == []
+    assert hv.renderer("bokeh").get_plot(plot) is not None
+
+
+def test_render_geo_map_keeps_hover(da):
+    plot, _ = render_geo_map(da, "lon", "lat", features=ALL_OFF)
+    rendered = hv.renderer("bokeh").get_plot(plot)
+    assert any(t.__class__.__name__ == "HoverTool" for t in rendered.state.tools)
+
+
+def test_render_geo_map_accepts_clim(da):
+    plot, unavailable = render_geo_map(da, "lon", "lat", features=ALL_OFF,
+                                       clim=(0.2, 0.8))
+    assert unavailable == []
+    assert hv.renderer("bokeh").get_plot(plot) is not None
+
+
+def test_render_geo_map_falls_back_without_datashader(da, monkeypatch):
+    def broken_rasterize(*args, **kwargs):
+        raise RuntimeError("numba unavailable")
+
+    monkeypatch.setattr(geo, "rasterize", broken_rasterize)
+    plot, unavailable = render_geo_map(da, "lon", "lat", features=ALL_OFF)
+    assert unavailable == []
+    rendered = hv.renderer("bokeh").get_plot(plot)
+    assert any(t.__class__.__name__ == "HoverTool" for t in rendered.state.tools)

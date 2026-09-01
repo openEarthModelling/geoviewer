@@ -4,6 +4,7 @@ import geoviews.feature as gf
 import holoviews as hv
 import numpy as np
 from cartopy import crs as ccrs
+from holoviews.operation.datashader import rasterize
 
 # Feature registry: name -> GeoViews feature element. Add lakes/rivers/states here later.
 FEATURES = {"coastline": gf.coastline, "borders": gf.borders, "grid": gf.grid}
@@ -55,3 +56,29 @@ def feature_overlay(features):
             continue
         overlay = element if overlay is None else overlay * element
     return overlay, unavailable
+
+
+def render_geo_map(da, x, y, *, features, cmap="turbo", clim=None,
+                   width=700, height=500, crs=None, projection=None):
+    """Full rendering pipeline. Returns (plot, unavailable_features).
+
+    plot = rasterized Image (QuadMesh fallback when datashader/numba is
+    unavailable, same semantics as the old hvplot try/except) overlaid with
+    the enabled cartopy features. unavailable_features lists features whose
+    data could not be loaded (empty when all fine); callers surface it as a
+    warning instead of failing the map. `projection` (display projection) is
+    reserved for Phase 3 and currently unused.
+    """
+    dataset = build_element(da, x, y, crs=crs)
+    image = dataset.to(gv.Image, [x, y]).opts(width=width, height=height,
+                                              tools=["hover"])
+    try:
+        layer = rasterize(image).opts(cmap=cmap, colorbar=True)
+    except Exception:
+        # Fall back to direct rendering when datashader/numba is unavailable
+        layer = dataset.to(gv.QuadMesh, [x, y]).opts(
+            width=width, height=height, cmap=cmap, colorbar=True, tools=["hover"])
+    if clim is not None:
+        layer = layer.opts(clim=clim)
+    overlay, unavailable = feature_overlay(features)
+    return (layer if overlay is None else layer * overlay), unavailable
