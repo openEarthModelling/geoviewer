@@ -28,7 +28,6 @@ dependencies = [
     "cfgrib>=0.9.15",
     "eccodes>=2.47",
     "panel>=1.8",
-    "hvplot>=0.12",
     "holoviews>=1.22",
     "datashader>=0.18",
     "bokeh>=3.8",

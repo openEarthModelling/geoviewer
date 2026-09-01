@@ -6,6 +6,11 @@ import numpy as np
 from cartopy import crs as ccrs
 from holoviews.operation.datashader import rasterize
 
+# Load the bokeh backend at import time: without a loaded backend every
+# .opts() call raises "No plotting extension is currently loaded" (the old
+# rendering stack loaded it as an import side effect).
+hv.extension("bokeh")
+
 # Feature registry: name -> GeoViews feature element. Add lakes/rivers/states here later.
 FEATURES = {"coastline": gf.coastline, "borders": gf.borders, "grid": gf.grid}
 
@@ -63,7 +68,7 @@ def render_geo_map(da, x, y, *, features, cmap="turbo", clim=None,
     """Full rendering pipeline. Returns (plot, unavailable_features).
 
     plot = rasterized Image (QuadMesh fallback when datashader/numba is
-    unavailable, same semantics as the old hvplot try/except) overlaid with
+    unavailable, same semantics as the previous try/except fallback) overlaid with
     the enabled cartopy features. unavailable_features lists features whose
     data could not be loaded (empty when all fine); callers surface it as a
     warning instead of failing the map. `projection` (display projection) is

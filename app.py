@@ -7,7 +7,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 # datashader relies on numba's jit cache; some environments raise "no locator
 # available" with the default cache location, so redirect to a writable /tmp
-# dir (must be set before importing panel/hvplot).
+# dir (must be set before importing panel/geoviews).
 os.environ.setdefault("NUMBA_CACHE_DIR", os.path.join(tempfile.gettempdir(), "numba_cache"))
 
 import panel as pn
@@ -58,7 +58,7 @@ def render():
     da = slice_svc.get(state["file"], state["var"], slices)
     if role.x and role.y:
         mp.set_data(state["file"], state["var"], da, x=role.x, y=role.y,
-                    cmap=ctl.cmap_select.value)
+                    cmap=ctl.cmap_select.value, features=ctl.feature_flags())
     else:
         mp.show_message("该变量无经纬度坐标，无法绘制地图")
 
@@ -133,6 +133,8 @@ ctl.time_slider.param.watch(lambda e: render(), "value")
 ctl.level_slider.param.watch(lambda e: render(), "value")
 ctl.cmap_select.param.watch(lambda e: render(), "value")
 ctl.mode_toggle.param.watch(lambda e: render(), "value")
+for w in (ctl.coastline_toggle, ctl.borders_toggle, ctl.grid_toggle):
+    w.param.watch(lambda e: render(), "value")
 
 layout = build_layout({
     "file_browser": fb,
